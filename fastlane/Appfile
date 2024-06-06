@@ -1,0 +1,20 @@
+# this file deliver ipa to appstroe, must config 
+app_identifier ENV['APP_IDENTIFIER'] # The bundle identifier of your app
+apple_id ENV['APPLE_ID'] # Your Apple email address
+
+itc_team_id ENV['ITC_TEAM_ID'] # iTunes Connect Team ID
+team_id ENV['TEAM_ID'] # Developer Portal Team ID
+
+# ENV["MATCH_PASSWORD"] = "2h*dDuULaN8#jSW" # 导出和打开 .p12文件的密码
+# for_lane :dev do
+#     app_identifier "com.hncjjc.patient" # The bundle identifier of your app
+#     apple_id "developer-admin@hncjjc.cn" # Your Apple email address
+    
+#     itc_team_id "67MUXHVX7Y" # iTunes Connect Team ID
+#     team_id "3LZMM9XGU5" # Developer Portal Team ID
+#   end
+
+# you can even provide different app identifiers, Apple IDs and team names per lane:
+# More information: https://docs.fastlane.tools/advanced/#appfile
+
+# wenliang:abc@123.

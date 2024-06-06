@@ -1,0 +1,147 @@
+# The Deliverfile allows you to store various App Store Connect metadata
+# For more information, check out the docs
+# https://docs.fastlane.tools/actions/deliver/
+
+
+############################# 基本信息 ####################################
+
+# bundle identifier
+app_identifier ENV['APP_IDENTIFIER']
+
+# Apple ID用户名
+username ENV['APPLE_ID']
+
+# 版权声明
+# copyright "2020 xxx Inc"
+
+# 支持语言
+supportedLanguages = {
+  "cmn-Hans" => "zh-Hans"
+}
+
+# app 名称
+# name({
+# 'zh-Hans' => "APPName"
+# })
+
+# 副标题
+# subtitle(
+#   'zh-Hans' => "副标题"
+# )
+
+# App价格
+#price_tier 0
+
+# 应用程序图标的路径 1024*1024
+app_icon ENV['APPICON_PATH']
+
+# 屏幕截图的文件夹的路径
+screenshots_path ENV['SCREENSHOTS_PATH']
+
+# 元数据的路径
+metadata_path ENV['METADATA_PATH']
+
+
+###################################  类别配置 ###################################
+
+# 参考网站https://docs.fastlane.tools/actions/upload_to_app_store/#reference
+# 设置 App 的类别.这里可以设置一个主要类别,一个次要类别.
+
+# 主要类别 
+primary_category "MZGenre.Lifestyle"
+# 主要类别第一个子类别 无
+# primary_first_sub_category
+# 主要类别第二个子类别 无
+# primary_second_sub_category
+
+# 要设置的次要类别
+secondary_category "MZGenre.Utilities"
+# 设置的次要第一个子类别 无
+# secondary_first_sub_category  
+# 设置的次要第二个子类别 无
+# secondary_second_sub_category
+
+
+################################## 关键字\描述等信息 ###################################
+
+# 搜索关键字
+# keywords(
+#  "zh-Hans" => "FastLane"
+# )
+
+# 技术支持网址
+# support_url({
+#  'zh-Hans' => "http://www.baidu.com"
+# })
+
+# 营销网址
+#marketing_url({ 
+#  'zh-Hans' => "http://www.baidu.com"
+#})
+
+# 隐私政策网址
+#privacy_url({
+#  'zh-Hans' => "http://www.baidu.com"
+#})
+
+# 本地化宣传文本信息介绍
+#promotional_text( 
+#  "zh-Hans" => "本地化宣传文本信息介绍",
+#)
+
+# app描述信息
+#description({ 
+#  'zh-Hans' => "APP的描述信息,用于APP功能的描述和介绍不能少于10个字符"
+#})
+
+# 版本描述
+#release_notes({
+#  'zh-Hans' => "这是第一个版本哦"
+#})
+
+
+################################## 分级 ########################################
+
+#年龄分级配置
+#app_rating_config_path "./fastlane/metadata/itunes_rating_config.json" 
+
+
+################################# 提交审核信息等 #########################################
+
+# 提交审核信息:加密, idfa 等
+submission_information({    
+    export_compliance_encryption_updated: false,
+    export_compliance_uses_encryption: false,
+    content_rights_contains_third_party_content: false,
+    add_id_info_uses_idfa: false,
+    add_id_info_serves_ads: true,
+    add_id_info_limits_tracking: true
+})
+
+# # 应用审核小组的联系信息 app 审核信息
+# app_review_information(
+#   first_name: "name",
+#   last_name: "name",
+#   phone_number: "手机号",
+#   email_address: "email",
+#   demo_user: "测试账号用户名",
+#   demo_password: "测试账号密码",
+#   notes: "noting"
+# )
+
+# run_precheck_before_submit true
+
+# 在上传新截图之前，先清除所有之前上传的截图
+overwrite_screenshots true
+
+# 下载 metadata 及 screenshots 时直接覆盖，不询问
+force true
+
+# 不上传截图
+skip_screenshots true
+
+# 是否自动提交审核,true表示立马提交审核
+submit_for_review false
+
+# 审核通过后是否立刻发布,false表示需要手动发布
+automatic_release true

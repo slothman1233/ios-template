@@ -1,0 +1,220 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+# 工程绝对路径  (这里注意是shell脚本所在的路径)
+# project_path = $(cd "$(dirname "$0")";pwd)
+
+
+
+
+# 工程名
+project_name = ENV['SCHEME_NAME']
+
+# Scheme名
+project_scheme = ENV['SCHEME_NAME']
+
+# project_ipa_Name = "患者端"
+
+# workspace名
+project_workspace = "./" + project_name + ".xcworkspace"
+
+
+
+
+api_key = app_store_connect_api_key(
+  key_id: ENV['CONNECT_KEY_ID'],
+  issuer_id: ENV['CONNECT_ISSUER_ID'],
+  key_filepath: ENV['CONNECT_KEY_FILEPATH'], # 上面下载的p8文件路径
+  duration: 1200, # optional (maximum 1200)
+  in_house: false # optional but may be required if using match/sigh
+)
+
+desc "下载所有需要的证书和描述文件到本地，不会重新创建证书和描述文件（只读方式）"
+lane :match_all do
+    match(api_key: api_key, type: "development", readonly: true)
+    match(api_key: api_key, type: "adhoc", readonly: true)
+    match(api_key: api_key, type: "appstore", readonly: true)
+end
+
+desc "同步证书，如果证书过期或新增了设备，会重新创建证书和描述文件"
+desc "该方法仅限管理员使用，其他开发成员只需要使用 match_all 方法即可"
+  lane :force_match do
+    match(api_key: api_key, type: "development",app_identifier:ENV['APP_IDENTIFIER'], force_for_new_devices: true)
+    match(api_key: api_key, type: "adhoc",app_identifier:ENV['APP_IDENTIFIER'],  force_for_new_devices: true)
+    match(api_key: api_key, type: "appstore",app_identifier:ENV['APP_IDENTIFIER'],)
+end
+
+desc "清空所有的证书和描述文件，慎用"
+lane :nuke_all do
+    match_nuke(api_key: api_key, type: "development")
+    match_nuke(api_key: api_key, type: "adhoc")
+    match_nuke(api_key: api_key, type: "appstore")
+end
+
+desc "注册设备，并更新描述文件"
+lane :sync_devices do
+    # devices.txt模板：
+    # http://devimages.apple.com/downloads/devices/Multiple-Upload-Samples.zip
+    register_devices(api_key: api_key, devices_file: "./devices.txt")
+    match(api_key: api_key, type: "development", force_for_new_devices: true)
+    match(api_key: api_key, type: "adhoc", force_for_new_devices: true)
+end
+
+
+# 编译模式
+# build_type=Debug
+
+default_platform(:ios)
+before_all do
+  # 所有lane执行之前
+  # 使用环境变量提供这个密码给fastlane，解决双重认证生成的特殊密码
+  # ENV["FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"] = "xxx"
+  # ENV["SLACK_URL"] = "https://hooks.slack.com/services/..."
+  # 拉取远程最新代码
+  # git_pull
+  # 执行 pod instasll
+  # cocoapods
+  # carthage
+end
+
+platform :ios do
+  desc "Description of what the lane does"
+
+  lane :prepare do
+    cocoapods
+    match
+  end
+
+
+  lane :custom_lane do
+    # add actions here: https://docs.fastlane.tools/actions
+  end
+
+  # 上传到蒲公英
+  lane :pgyers do| options |
+     #配置上传蒲公英账号  蒲公英的 api_key和 password (这个是你设置密码下载时用的密码)具体可以参考官方文档https://github.com/PGYER/fastlane-plugin-pgyer
+    pgyer(
+      api_key: ENV['PGYER_API_KEY'], # 从蒲公英项目详情中获取的apikey
+      # user_key: ENV['PGYER_USER_KEY'],# 从蒲公英项目详情中获取的 userkey
+      # ipa: $IPA_PATH, #ipa包路径
+      password: ENV['PGYER_INSTALL_PASSWORD'], #设置安装密码
+      update_description:options[:description], #更新描述
+      install_type: ENV['PGYER_INSTALL_TYPE'], #1：公开，2：密码安装，3：邀请安装，4：回答问题安装。默认为1公开) # ,password:"xxxxx",install_type:"2",update_description: "update by fastlane"
+    )
+  end
+
+  lane :dev do
+    
+    prepare
+    match(api_key: api_key, type: "adhoc", readonly: true)
+    build_app(
+      workspace:project_workspace,
+      scheme:project_scheme, # 项目的scheme，换成自己的
+      export_method:"ad-hoc",# 打包导出方式，包含app-store, validation, ad-hoc, package, enterprise, development, developer-id and mac-application
+
+      output_directory:ENV['OUTPUT_DIRECTORY'] + "/development", # 打包出ipa文件路径，后边上传的时候也会用到
+      # output_name: 'patient.ipa',# 打包的名称，换成自己的
+      configuration:"Release", # 默认Release，Release or Debug
+      clean:true, #每次打包之前clean一下
+      # include_bitcode: true,# 是否包含bitcode
+      # include_symbols: true,# 是否包含symbols
+    )
+      pgyers(description:'fastlane开发环境自动打包上传')
+  end
+  
+  lane :test do
+    prepare
+    match(api_key: api_key, type: "adhoc", readonly: true)
+    build_app(
+      workspace:project_workspace,
+      scheme:project_scheme + "-Test", # 项目的scheme，换成自己的
+      export_method:"ad-hoc",# 打包导出方式，包含app-store, validation, ad-hoc, package, enterprise, development, developer-id and mac-application
+      output_directory:ENV['OUTPUT_DIRECTORY'] + "/test",#打包后的路径,自己随意
+      # output_name: 'patient.ipa',# 打包的名称，换成自己的
+      configuration:"Release", # 默认Release，Release or Debug
+      clean:true,
+      # include_bitcode: true,# 是否包含bitcode
+      # include_symbols: true,# 是否包含symbols
+    )
+      pgyers(description:'fastlane测试环境自动打包上传')
+  end
+
+  lane :ptest do
+    
+    prepare
+    match(api_key: api_key, type: "adhoc", readonly: true)
+    build_app(
+      workspace:project_workspace,
+      scheme:project_scheme + "-PTest", # 项目的scheme，换成自己的
+      export_method:"ad-hoc",# 打包导出方式，包含app-store, validation, ad-hoc, package, enterprise, development, developer-id and mac-application
+      output_directory:ENV['OUTPUT_DIRECTORY'] + "/ptest",#打包后的路径,自己随意
+      # output_name: 'patient.ipa',# 打包的名称，换成自己的
+      configuration:"Release", # 默认Release，Release or Debug
+      clean:true,
+      # include_bitcode: true,# 是否包含bitcode
+      # include_symbols: true,# 是否包含symbols
+    )
+      pgyers(description:'fastlane预发布环境自动打包上传')
+  end
+
+  lane:prod do
+    prepare
+    build_app(
+      workspace:project_workspace,
+      scheme:project_scheme + "-Prod", # 项目的scheme，换成自己的
+      export_method:"app-store",# 打包导出方式，包含app-store, validation, ad-hoc, package, enterprise, development, developer-id and mac-application
+      output_directory:ENV['OUTPUT_DIRECTORY'] + "/appstore",#打包后的路径,自己随意
+      # output_name: 'patient.ipa',# 打包的名称，换成自己的
+      configuration:"Release", # 默认Release，Release or Debug
+      clean:true	
+      # include_bitcode: true,# 是否包含bitcode
+      # include_symbols: true,# 是否包含symbols
+      )
+      upload_to_app_store( #上传appstore的配置
+        app_identifier:ENV['APP_IDENTIFIER'],#bundle Id
+        username:ENV['APPLE_ID'],#apple Id
+        ipa:ENV['OUTPUT_DIRECTORY'] + "/appstore", #和output_directory的路径对应
+        skip_screenshots:true,
+        skip_app_version_update:false,
+        submit_for_review:false, 
+        reject_if_possible:true,
+        skip_metadata:true
+      )
+     
+    # add actions here: https://docs.fastlane.tools/actions
+  end
+
+ 
+
+
+  #执行lane成功后的回调
+  after_all do |lane|
+    # slack(
+    #   message: "Successfully deployed new App Update."
+    # )
+  end
+
+  # 如果流程发生异常会走这里并终止
+  error do |lane, exception|
+    # slack(
+    #   message: exception.message,
+    #   success: false
+    # )
+  end
+end
+
+
+
+

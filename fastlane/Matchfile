@@ -1,0 +1,26 @@
+git_url(ENV['MATCH_GITURL'])
+
+# git_url("http://oauth2:566MTZ18pivebB3vQqvZ@121.40.87.187:8001/cjjc/public/certificate/ios/cer-ios-file.git")
+# 566MTZ18pivebB3vQqvZ
+storage_mode("git")
+
+#分支
+git_branch(ENV['MATCH_GITBRANCH'])
+
+clone_branch_directly(true)
+
+type("appstore") # The default type, can be: appstore, adhoc, enterprise or development
+
+app_identifier(ENV['APP_IDENTIFIER'])
+
+# ENV["MATCH_PASSWORD"] = "abc@123." # 导出和打开 .p12文件的密码
+
+
+# keychain_password("cjjcpctp")
+# username("developer-admin@hncjjc.cn") # Your Apple Developer Portal username
+# ENV["MATCH_PASSWORD"] = "cjjcpctp" # 导出和打开 .p12文件的密码
+# ENV["MATCH_KEYCHAIN_PASSWORD"] = "wenliang123"
+# For all available options run `fastlane match --help`
+# Remove the # in the beginning of the line to enable the other options
+
+# The docs are available on https://docs.fastlane.tools/actions/match
